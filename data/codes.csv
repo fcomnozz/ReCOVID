@@ -1,0 +1,22 @@
+Event,Code
+PCR/TMA+,A
+PCR/TMA-,B
+PCR sequenced,C
+PCR potential seq.,D
+Antigen+,E
+Antigen-,F
+Serology+,G
+Serology-,H
+Pfizer,I
+Moderna,J
+AstraZeneca,K
+Janssen,L
+HIPRA,M
+Hosp. entry (probable COVID),N
+Hosp. entry (possible COVID),O
+Hosp. entry (ischemic embolic phenomena possibly derived from COVID),P
+Hosp. discharge,Q
+UCI/UCRI entry,R
+UCI/UCRI discharge,S
+Decease,T
+Symptomatology,U
