@@ -31,6 +31,9 @@ diag <- read.csv('../data/diagnosis_h.csv', sep = '\t', header = T)
 # other variables
 var <- read.csv('../data/variables_h.csv', sep = '\t', header = T)
 
+# possible variants
+variants <- read.csv('../results/possible_variants.csv', sep = ',', header = F)
+colnames(variants) <- c('id', 'reinfection1', 'reinfection2', 'reinfection3')
 
 #### ALL PATIENTS ####
 
@@ -39,7 +42,7 @@ prop.table(table(dem$sex))
 # female - 0.6855
 # male - 0.3133
 # other - 0.0012
-tab = table(dem$sex)
+tab = prop.table(table(dem$sex))
 tab = as.data.frame(tab)
 
 p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Accent',
@@ -68,6 +71,11 @@ tab$complejidad <- as.factor(tab$complejidad)
 
 ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'complejidad',
           palette = 'Reds')
+
+# prevalence
+tab$prev <- tab$Freq/3303
+ggbarplot(tab, x = 'GM', y = 'prev', fill = 'complejidad',
+          palette = 'Reds', ylab = 'Prevalence')
 
 # PCC (pacientes cronicos complejos) y MACA (enfermedad cronica avanzada)
 prop.table(table(dem$pcc)) # 0.1105
@@ -126,3 +134,127 @@ p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 ant2$prev <- ant2$Freq/3303
 p <- ggbarplot(ant2, x = 'Comorb', y = 'prev', fill = 'goldenrod', ylab = 'Prevalence')
 p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# reinfection variants profile
+# removing empty rows
+variants <- variants[variants$reinfection1 != '',]
+
+# only first reinfection
+variants1 <- variants[,c(1,2)]
+prop.table(table(variants1$reinfection1))
+
+tab = prop.table(table(variants1$reinfection1))
+tab = as.data.frame(tab)
+tab$Var1 <- factor(tab$Var1, levels = c('pre-alpha:pre-alpha', 'pre-alpha:alpha',
+                                           'pre-alpha:delta', 'pre-alpha:omicron',
+                                           'alpha:alpha', 'alpha:delta', 'alpha:omicron',
+                                           'delta:delta', 'delta:omicron'))
+
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Set3',
+               fill = 'Var1', xlab = 'Variants', ylab = 'Proportion',
+               title = 'Variant profiling of first reinfections')
+p + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + rremove('legend')
+
+# all reinfections
+allv <- variants1
+colnames(allv) <- c('id', 'reinfection')
+
+tmp <- variants[,c(1,3)]
+colnames(tmp) <- c('id', 'reinfection')
+tmp <- tmp[tmp$reinfection != '',]
+
+allv <- rbind(allv, tmp)
+
+tmp <- variants[,c(1,4)]
+colnames(tmp) <- c('id', 'reinfection')
+tmp <- tmp[tmp$reinfection != '',]
+
+allv <- rbind(allv, tmp)
+rm(tmp)
+dim(allv)
+
+tab = prop.table(table(allv$reinfection))
+tab = as.data.frame(tab)
+tab$Var1 <- factor(tab$Var1, levels = c('pre-alpha:pre-alpha', 'pre-alpha:alpha',
+                                        'pre-alpha:delta', 'pre-alpha:omicron',
+                                        'alpha:alpha', 'alpha:delta', 'alpha:omicron',
+                                        'delta:delta', 'delta:omicron', 'omicron:omicron'))
+
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Set3',
+               fill = 'Var1', xlab = 'Variants', ylab = 'Proportion',
+               title = 'Variant profiling of all reinfections')
+p + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + rremove('legend')
+
+# plotting total counts of variants
+vnames = c('pre-alpha', 'alpha', 'delta', 'omicron')
+vcounts = c(2885, 574, 1262, 2132) # obtained from python analysis
+total_variant <- data.frame(variant = vnames, count = vcounts)
+
+p <- ggbarplot(total_variant, x = 'variant', y = 'count', palette = 'Accent',
+               fill = 'variant')
+p + rremove('legend')
+
+
+
+###### SELECTED PATIENTS ######
+# filtering data
+demf <- merge(dem, f[1], by = 'id')
+names(ant)[colnames(ant) == 'ID_ANONIMITZAT'] <- 'id'
+antf <- merge(ant, f[1], by = 'id')
+variantsf <- merge(variants, f[1], by = 'id')
+
+# sex
+prop.table(table(demf$sex))
+
+tab = prop.table(table(demf$sex))
+tab = as.data.frame(tab)
+
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Accent',
+               fill = 'Var1', xlab = 'Sex')
+p + rremove('legend')
+
+# age
+mean(demf$age, na.rm = T) 
+median(demf$age, na.rm = T) 
+quantile(demf$age, na.rm = T)
+
+ggdensity(demf, x = 'age', 
+          add = 'median', fill = 'turquoise')
+
+# GMA
+tab <- table(demf$gma)
+tab <- as.data.frame(tab)
+tab$GM <- c('Sanos', rep('Agudos', 5), rep('Emb/Parto', 4),
+            rep('Cron. 1 sist.', 5), rep('Cron. 2-3 sist.', 5),
+            rep('Cron. 4+ sist.', 5), rep('Neop. activa', 4)
+)
+tab$complejidad <- c(0, 1:5, 1:4, rep(seq(1,5), 3), 1:4)
+tab$GM <- as.factor(tab$GM)
+tab$complejidad <- as.factor(tab$complejidad)
+
+
+ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'complejidad',
+          palette = 'Reds')
+
+# prevalence
+tab$prev <- tab$Freq/1235
+ggbarplot(tab, x = 'GM', y = 'prev', fill = 'complejidad',
+          palette = 'Reds', ylab = 'Prevalence')
+
+# PCC (pacientes cronicos complejos) y MACA (enfermedad cronica avanzada)
+prop.table(table(demf$pcc))
+prop.table(table(demf$maca))
+
+#comorbidities
+ant2f = subset(antf, select = -c(id, BARTHEL, BARTHEL_DATA) )
+ant2f <- as.data.frame(mapply(sum, ant2f))
+ant2f$COMORB <- rownames(ant2f)
+colnames(ant2f) <- c('Freq', 'Comorb')
+p <- ggbarplot(ant2f, x = 'Comorb', y = 'Freq', fill = 'goldenrod')
+p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# same but with percentages
+ant2f$prev <- ant2f$Freq/1235
+p <- ggbarplot(ant2f, x = 'Comorb', y = 'prev', fill = 'goldenrod', ylab = 'Prevalence')
+p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
