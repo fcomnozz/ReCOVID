@@ -187,7 +187,7 @@ p + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + rremove(
 
 # plotting total counts of variants
 vnames = c('pre-alpha', 'alpha', 'delta', 'omicron')
-vcounts = c(2885, 574, 1262, 2132) # obtained from python analysis
+vcounts = c(2856, 574, 1256, 2035) # obtained from python analysis
 total_variant <- data.frame(variant = vnames, count = vcounts)
 
 p <- ggbarplot(total_variant, x = 'variant', y = 'count', palette = 'Accent',
@@ -202,6 +202,8 @@ demf <- merge(dem, f[1], by = 'id')
 names(ant)[colnames(ant) == 'ID_ANONIMITZAT'] <- 'id'
 antf <- merge(ant, f[1], by = 'id')
 variantsf <- merge(variants, f[1], by = 'id')
+variantsf <- variantsf[, c(1,2)]
+colnames(variantsf) <- c('id', 'reinfection')
 
 # sex
 prop.table(table(demf$sex))
@@ -258,3 +260,15 @@ ant2f$prev <- ant2f$Freq/1235
 p <- ggbarplot(ant2f, x = 'Comorb', y = 'prev', fill = 'goldenrod', ylab = 'Prevalence')
 p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
+# variants
+tab = prop.table(table(variantsf$reinfection))
+tab = as.data.frame(tab)
+tab$Var1 <- factor(tab$Var1, levels = c('pre-alpha:pre-alpha', 'pre-alpha:alpha',
+                                        'pre-alpha:delta', 'pre-alpha:omicron',
+                                        'alpha:alpha', 'alpha:delta', 'alpha:omicron',
+                                        'delta:delta', 'delta:omicron'))
+
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Set3',
+               fill = 'Var1', xlab = 'Variants', ylab = 'Proportion',
+               title = 'Variant profiling of reinfections')
+p + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + rremove('legend')
