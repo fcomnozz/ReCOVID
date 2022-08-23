@@ -234,7 +234,6 @@ tab$complejidad <- c(0, 1:5, 1:4, rep(seq(1,5), 3), 1:4)
 tab$GM <- as.factor(tab$GM)
 tab$complejidad <- as.factor(tab$complejidad)
 
-
 ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'complejidad',
           palette = 'Reds')
 
