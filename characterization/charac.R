@@ -275,3 +275,71 @@ p + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + rremove(
 
 # hospitalization
 prop.table(table(demf$hosp))
+
+
+
+#### PATIENTS WITH MULTIPLE REINFECTIONS ####
+multi <- variants[variants$reinfection2 != '',]
+dim(multi) # 146 patients
+
+# filtering data
+demm <- merge(dem, multi[1], by = 'id')
+antm <- merge(ant, multi[1], by = 'id')
+
+# sex
+prop.table(table(demm$sex)) # F: 0.73
+
+tab = prop.table(table(demm$sex))
+tab = as.data.frame(tab)
+
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Accent',
+               fill = 'Var1', xlab = 'Sex')
+p + rremove('legend')
+
+# age
+mean(demm$age, na.rm = T) 
+median(demm$age, na.rm = T) # 43
+quantile(demm$age, na.rm = T)
+
+ggdensity(demm, x = 'age', 
+          add = 'median', fill = 'turquoise')
+
+# GMA
+tab <- table(demm$gma)
+tab <- as.data.frame(tab)
+table(tab)
+tab$GM <- c('Sanos', rep('Agudos', 4), rep('Emb/Parto', 2),
+            rep('Cron. 1 sist.', 5), rep('Cron. 2-3 sist.', 5),
+            rep('Cron. 4+ sist.', 5), rep('Neop. activa', 2)
+)
+tab$complejidad <- c(0, 1:3, 5, 2, 3, rep(seq(1,5), 3), 1, 2)
+tab$GM <- as.factor(tab$GM)
+tab$complejidad <- as.factor(tab$complejidad)
+
+ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'complejidad',
+          palette = 'Reds')
+
+# prevalence
+tab$prev <- tab$Freq/146
+ggbarplot(tab, x = 'GM', y = 'prev', fill = 'complejidad',
+          palette = 'Reds', ylab = 'Prevalence')
+
+# PCC (pacientes cronicos complejos) y MACA (enfermedad cronica avanzada)
+prop.table(table(demm$pcc)) # 0.14
+prop.table(table(demm$maca)) # 0.02
+
+#comorbidities
+ant2m = subset(antm, select = -c(id, BARTHEL, BARTHEL_DATA) )
+ant2m <- as.data.frame(mapply(sum, ant2m))
+ant2m$COMORB <- rownames(ant2m)
+colnames(ant2m) <- c('Freq', 'Comorb')
+p <- ggbarplot(ant2m, x = 'Comorb', y = 'Freq', fill = 'goldenrod')
+p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# same but with percentages
+ant2m$prev <- ant2m$Freq/146
+p <- ggbarplot(ant2m, x = 'Comorb', y = 'prev', fill = 'goldenrod', ylab = 'Prevalence')
+p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+# hospitalization
+prop.table(table(demm$hosp)) # 0.08
