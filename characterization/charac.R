@@ -190,10 +190,11 @@ vnames = c('pre-alpha', 'alpha', 'delta', 'omicron')
 vcounts = c(2856, 574, 1256, 2035) # obtained from python analysis
 total_variant <- data.frame(variant = vnames, count = vcounts)
 
-p <- ggbarplot(total_variant, x = 'variant', y = 'count', palette = 'Accent',
-               fill = 'variant')
+p <- ggbarplot(total_variant, x = 'variant', y = 'count', color = 'grey3', fill = 'lightgrey')
 p + rremove('legend')
 
+# hospitalization
+prop.table(table(dem$hosp))
 
 
 ###### SELECTED PATIENTS ######
@@ -271,3 +272,6 @@ p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Set3',
                fill = 'Var1', xlab = 'Variants', ylab = 'Proportion',
                title = 'Variant profiling of reinfections')
 p + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + rremove('legend')
+
+# hospitalization
+prop.table(table(demf$hosp))
