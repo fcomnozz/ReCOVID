@@ -343,3 +343,16 @@ p + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
 
 # hospitalization
 prop.table(table(demm$hosp)) # 0.08
+
+# comparing the combination of variants groups
+# accounting just for the first infection
+DEM <- merge(dem, variants1,  by = 'id')
+table(DEM$reinfection1)
+DEM %>% group_by(reinfection1) %>% 
+  mutate(median = median(age, na.rm = TRUE)) %>% 
+  group_by(reinfection1, median) %>% 
+  summarise()
+
+# sex
+DEM %>%                       
+  group_by(reinfection1)
