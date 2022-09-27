@@ -44,9 +44,10 @@ prop.table(table(dem$sex))
 # other - 0.0012
 tab = prop.table(table(dem$sex))
 tab = as.data.frame(tab)
+tab$Var1 <- c('Other', 'Female', 'Male')
 
 p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Accent',
-          fill = 'Var1', xlab = 'Sex')
+          fill = 'Var1', xlab = '')
 p + rremove('legend')
 
 # Age
@@ -55,27 +56,32 @@ median(dem$age, na.rm = T) # 43
 quantile(dem$age, na.rm = T) # Q1 = 27; Q3 = 61
 
 ggdensity(dem, x = 'age', 
-          add = 'median', fill = 'turquoise')
+          add = 'median', fill = 'turquoise', xlab = 'Age',
+          ylab = 'Density')
+
 
 # GMA
 tab <- table(dem$gma)
 tab <- as.data.frame(tab)
-tab$GM <- c('Sanos', rep('Agudos', 5), rep('Emb/Parto', 5),
-            rep('Cron. 1 sist.', 5), rep('Cron. 2-3 sist.', 5),
-            rep('Cron. 4+ sist.', 5), rep('Neop. activa', 4)
+tab$GM <- c('Healthy', rep('Acute', 5), rep('Pregnancy/Birth', 5),
+            rep('Chron. 1 sist.', 5), rep('Chron. 2-3 sist.', 5),
+            rep('Chron. 4+ sist.', 5), rep('Active neoplasia', 4)
 )
-tab$complejidad <- c(0, rep(seq(1,5), 5), 1, 2, 3, 4)
+tab$Complexity <- c(0, rep(seq(1,5), 5), 1, 2, 3, 4)
 tab$GM <- as.factor(tab$GM)
-tab$complejidad <- as.factor(tab$complejidad)
+tab$Complexity <- as.factor(tab$Complexity)
 
 
-ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'complejidad',
+p <- ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'Complexity',
           palette = 'Reds')
+
+p
 
 # prevalence
 tab$prev <- tab$Freq/3303
-ggbarplot(tab, x = 'GM', y = 'prev', fill = 'complejidad',
-          palette = 'Reds', ylab = 'Prevalence')
+ggbarplot(tab, x = 'GM', y = 'prev', fill = 'Complexity',
+          palette = 'Reds', ylab = 'Prevalence') + 
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.5, hjust=0.5))
 
 # PCC (pacientes cronicos complejos) y MACA (enfermedad cronica avanzada)
 prop.table(table(dem$pcc)) # 0.1105
@@ -182,7 +188,7 @@ tab$Var1 <- factor(tab$Var1, levels = c('pre-alpha:pre-alpha', 'pre-alpha:alpha'
 
 p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Set3',
                fill = 'Var1', xlab = 'Variants', ylab = 'Proportion',
-               title = 'Variant profiling of all reinfections')
+               title = 'Estimated variant profiling of all reinfections')
 p + theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust=1)) + rremove('legend')
 
 # plotting total counts of variants
