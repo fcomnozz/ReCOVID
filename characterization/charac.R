@@ -68,7 +68,9 @@ tab$GM <- c('Healthy', rep('Acute', 5), rep('Pregnancy/Birth', 5),
             rep('Chron. 4+ sist.', 5), rep('Active neoplasia', 4)
 )
 tab$Complexity <- c(0, rep(seq(1,5), 5), 1, 2, 3, 4)
-tab$GM <- as.factor(tab$GM)
+tab$GM <- factor(tab$GM, levels = c('Healthy', 'Acute', 'Pregnancy/Birth',
+                                    'Chron. 1 sist.', 'Chron. 2-3 sist.',
+                                    'Chron. 4+ sist.', 'Active neoplasia'))
 tab$Complexity <- as.factor(tab$Complexity)
 
 
@@ -361,4 +363,130 @@ DEM %>% group_by(reinfection1) %>%
 
 # sex
 DEM %>%                       
-  group_by(reinfection1)
+  group_by(reinfection1) ########### TO DO ###########
+
+
+# Getting demographics by GMA group (all patients)
+dem$GM <- NA
+dem[!is.na(dem$gma) & dem$gma == 1, 'GM'] <- 'Healthy'
+dem[dem$gma %in% c(101:105), 'GM'] <- 'Acute'
+dem[dem$gma %in% c(201:205), 'GM'] <- 'Pregnancy/Delivery'
+dem[dem$gma %in% c(311:315), 'GM'] <- 'Chron. 1 system'
+dem[dem$gma %in% c(321:325), 'GM'] <- 'Chron. 2-3 systems'
+dem[dem$gma %in% c(331:335), 'GM'] <- 'Chron. 4+ systems'
+dem[dem$gma %in% c(401:404), 'GM'] <- 'Active neoplasia'
+
+prop.table(table(dem$GM))
+
+# plotting age distribution for each GM
+ggdensity(dem[!is.na(dem$GM),], x = 'age', 
+          add = 'median', fill = 'GM', xlab = 'Age')
+
+ggdensity(dem[!is.na(dem$GM),], x = 'age', 
+          add = 'median', fill = 'GM', 
+          facet.by = 'GM', xlab = 'Age')
+
+# By sex
+# Only 4 non-binary people so we won't represent them
+ggdensity(dem[dem$sex != 'Altres',], x = 'age',
+          add = 'median', fill = 'sex',
+          xlab = 'Age', )
+
+ggdensity(dem[dem$sex != 'Altres',], x = 'age',
+          add = 'median', fill = 'sex',
+          xlab = 'Age', facet.by = 'sex')
+
+# Age groups
+# The general age curve show three peaks so we will split these age groups:
+# 0-34
+# 35-70
+# 70-100
+ggdensity(dem[dem$sex != 'Altres',], x = 'age',
+         xlab = 'Age', fill = 'turquoise') + 
+  geom_vline(xintercept = 34) + 
+  geom_vline(xintercept = 70)
+
+# Plotting sex and GMA based on these age groups
+# Group 1
+tab = prop.table(table(dem[dem$age %in% c(0:34),'sex']))
+tab = as.data.frame(tab)
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Accent',
+               fill = 'Var1', xlab = 'Sex', title = 'Individuals under 35 years old')
+p + rremove('legend')
+
+# Group 2
+tab = prop.table(table(dem[dem$age %in% c(35:70),'sex']))
+tab = as.data.frame(tab)
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Accent',
+               fill = 'Var1', xlab = 'Sex', title = 'Individuals between 35 and 70 years old')
+p + rremove('legend')
+
+# Group 3
+tab = prop.table(table(dem[dem$age %in% c(71:100),'sex']))
+tab = as.data.frame(tab)
+p <- ggbarplot(tab, x = 'Var1', y = 'Freq', palette = 'Accent',
+               fill = 'Var1', xlab = 'Sex', title = 'Individuals over 70 years old')
+p + rremove('legend')
+
+# Adding age group column
+dem$age.group <- NA
+dem[dem$age %in% c(0:34), 'age.group'] <- 1
+dem[dem$age %in% c(35:70), 'age.group'] <- 2
+dem[dem$age %in% c(71:100), 'age.group'] <- 3
+
+table(dem$age.group)
+# converting variables to factor
+dem$age.group <- as.factor(dem$age.group)
+dem$sex <- factor(dem$sex, levels = c('Dona', 'Home'))
+
+# Fisher's test
+fisher.test(dem$sex, dem$age.group) # 4.7e-07
+library(rstatix)
+pairwise_fisher_test(table(dem$sex, dem$age.group)) # differences btw 1-2 & 1-3
+
+# GMA
+# Group 1
+tab <- table(dem[dem$age.group == 1, 'gma'])
+tab <- as.data.frame(tab)
+tab$GM <- c('Healthy', rep('Acute', 5), rep('Pregnancy/Birth', 5),
+            rep('Chron. 1 sist.', 5), rep('Chron. 2-3 sist.', 5),
+            rep('Chron. 4+ sist.', 3), 'Active neoplasia'
+)
+tab$Complexity <- c(0, rep(seq(1,5), 4), 1, 2, 3, 1)
+tab$GM <- factor(tab$GM, levels = c('Healthy', 'Acute', 'Pregnancy/Birth',
+                                   'Chron. 1 sist.', 'Chron. 2-3 sist.',
+                                   'Chron. 4+ sist.', 'Active neoplasia'))
+tab$Complexity <- as.factor(tab$Complexity)
+
+ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'Complexity',
+               palette = 'Reds', title = 'Individuals under 35 years old')
+
+# Group 2
+tab <- table(dem[dem$age.group == 2, 'gma'])
+tab <- as.data.frame(tab)
+tab$GM <- c('Healthy', rep('Acute', 5), rep('Pregnancy/Birth', 4),
+            rep('Chron. 1 sist.', 5), rep('Chron. 2-3 sist.', 5),
+            rep('Chron. 4+ sist.', 5), rep('Active neoplasia', 3)
+)
+tab$Complexity <- c(0, seq(1,5), seq(1,4), rep(seq(1,5), 3), seq(1,3))
+tab$GM <- factor(tab$GM, levels = c('Healthy', 'Acute', 'Pregnancy/Birth',
+                                    'Chron. 1 sist.', 'Chron. 2-3 sist.',
+                                    'Chron. 4+ sist.', 'Active neoplasia'))
+tab$Complexity <- as.factor(tab$Complexity)
+
+ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'Complexity',
+          palette = 'Reds', title = 'Individuals between 35 and 70 years old')
+
+# Group 3
+tab <- table(dem[dem$age.group == 3, 'gma'])
+tab <- as.data.frame(tab)
+tab$GM <- c(rep('Chron. 1 sist.', 2), rep('Chron. 2-3 sist.', 5),
+            rep('Chron. 4+ sist.', 5), rep('Active neoplasia', 4)
+)
+tab$Complexity <- c(4, 5, rep(seq(1,5), 2), seq(1,4))
+tab$GM <- factor(tab$GM, levels = c('Chron. 1 sist.', 'Chron. 2-3 sist.',
+                                    'Chron. 4+ sist.', 'Active neoplasia'))
+tab$Complexity <- as.factor(tab$Complexity)
+
+ggbarplot(tab, x = 'GM', y = 'Freq', fill = 'Complexity',
+          palette = 'Reds', title = 'Individuals over 70 years old')
